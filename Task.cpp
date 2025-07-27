@@ -53,8 +53,8 @@ void Task::PrintTask(std::ostream& stream)
     stream 
     << "[" << m_id << "] "
     << m_description
-    << " (" << s << " ) "
-    << "@ { " << m_createdAt << " , "
-    << "}\n";
+    << " (" << s << ") "
+    << "created @ " << m_createdAt << "\n";
+    //<< "}\n";
     //<< m_updatedAt << "}\n";
 }
