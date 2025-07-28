@@ -38,23 +38,38 @@ void Task::MarkTask(Status status)
 
 void Task::PrintTask(std::ostream& stream)
 {
-    std::string s = "";
-    switch (m_status) {
-        case Status::TODO:
-            s = "TODO";
-            break;
-        case Status::IN_PROGRESS:
-            s = "IN PROGRESS";
-            break;
-        case Status::DONE:
-            s = "DONE";
-            break;
-    }
     stream 
     << "[" << m_id << "] "
     << m_description
-    << " (" << s << ") "
+    << " (" << GetStatus() << ") "
     << "created @ " << m_createdAt << "\n";
     //<< "}\n";
     //<< m_updatedAt << "}\n";
+}
+
+std::string_view Task::GetStatus()
+{
+    switch (m_status) 
+    {
+        case Status::TODO:
+            return "TODO";
+        case Status::IN_PROGRESS:
+            return "IN PROGRESS";
+        case Status::DONE:
+            return "DONE";
+        default:
+            return "NO STATUS";
+    }   
+}
+
+void Task::ToJson(std::ostream& stream)
+{
+    stream
+    << "{\n"
+    << "    \"id\": " << m_id << ",\n"
+    << "    \"description\": " << "\"" << m_description << "\",\n"
+    << "    \"status\": " << "\"" << GetStatus() << "\",\n"
+    << "    \"createdAt\": " << "\"" << m_createdAt << "\",\n"
+    << "    \"updatedAt\": " << "\"" << "null" << "\"\n"
+    << "}";
 }

@@ -2,9 +2,15 @@
 cmake_minimum_required(VERSION 3.10)
 project(Task-Tracker VERSION 0.1 LANGUAGES CXX)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# Default auf Debug
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING
+        "Choose the type of build: Debug or Release" FORCE)
+endif()
+
 
 # 2) C++ Standard setzen
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)

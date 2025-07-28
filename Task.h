@@ -3,7 +3,7 @@
 #include <string>
 #include <ostream>
 #include <optional>
-//#include <string_view>
+#include <string_view>
 
 class Task
 {
@@ -22,7 +22,8 @@ public:
     void MarkTask(Status status);
 
     void PrintTask(std::ostream& stream);
-
+    std::string_view GetStatus();
+    void ToJson(std::ostream& stream);
 private:
     int         m_id;
     std::string m_description;
