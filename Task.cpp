@@ -47,6 +47,28 @@ void Task::PrintTask(std::ostream& stream)
     //<< m_updatedAt << "}\n";
 }
 
+void Task::ToJson(std::ostream& stream)
+{
+    stream
+    << "{\n"
+    << "    \"id\": " << m_id << ",\n"
+    << "    \"description\": " << "\"" << m_description << "\",\n"
+    << "    \"status\": " << "\"" << GetStatus() << "\",\n"
+    << "    \"createdAt\": " << "\"" << m_createdAt << "\",\n"
+    << "    \"updatedAt\": " << "\"" << "null" << "\"\n"
+    << "}";
+}
+
+int Task::GetId()
+{
+    return m_id;
+}
+
+std::string_view Task::GetDescription()
+{
+    return m_description;
+}
+
 std::string_view Task::GetStatus()
 {
     switch (m_status) 
@@ -62,14 +84,16 @@ std::string_view Task::GetStatus()
     }   
 }
 
-void Task::ToJson(std::ostream& stream)
+std::chrono::system_clock::time_point Task::GetCreatedAt()
 {
-    stream
-    << "{\n"
-    << "    \"id\": " << m_id << ",\n"
-    << "    \"description\": " << "\"" << m_description << "\",\n"
-    << "    \"status\": " << "\"" << GetStatus() << "\",\n"
-    << "    \"createdAt\": " << "\"" << m_createdAt << "\",\n"
-    << "    \"updatedAt\": " << "\"" << "null" << "\"\n"
-    << "}";
+    return m_createdAt;
 }
+std::optional<std::chrono::system_clock::time_point> Task::GetUpdatedAt()
+{
+    return m_updatedAt;
+}
+
+//Task CreateTaskFromString(const std::string& objectString)
+//{
+//    auto task = Task()
+//}

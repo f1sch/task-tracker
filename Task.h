@@ -15,15 +15,22 @@ public:
     Task(int id, std::string description);
     ~Task() = default;
 
-    //void AddTask(std::string description);
+    // change task
     void UpdateTask(std::string description);
-    //void DeleteTask(int id);
-
     void MarkTask(Status status);
 
+    // helper
     void PrintTask(std::ostream& stream);
-    std::string_view GetStatus();
     void ToJson(std::ostream& stream);
+    Task CreateTaskFromString(const std::string& objectString);
+    
+    // Getter
+    int GetId();
+    std::string_view GetDescription();
+    std::string_view GetStatus();
+    std::chrono::system_clock::time_point GetCreatedAt();
+    std::optional<std::chrono::system_clock::time_point> GetUpdatedAt();
+
 private:
     int         m_id;
     std::string m_description;

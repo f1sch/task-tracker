@@ -1,7 +1,16 @@
-{
-    "id": 1,
-    "description": "Buy some milk",
-    "status": "TODO",
-    "createdAt": "2025-07-28 21:18:57",
-    "updatedAt": "null"
-}
+[
+    {
+        "id": 1,
+        "description": "new task3",
+        "status": "TODO",
+        "createdAt": "2025-07-29 11:03:18",
+        "updatedAt": "null"
+    },
+    {
+        "id": 2,
+        "description": "new task2",
+        "status": "TODO",
+        "createdAt": "2025-07-29 11:03:19",
+        "updatedAt": "null"
+    }   
+]
