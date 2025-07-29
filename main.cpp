@@ -25,8 +25,14 @@
     #include <limits.h>
 #endif
 
-// Globals
-//const std::string g_taskListPath = "../task-tracker.json";
+// TODO: fix indices 
+//  -> std::vector<Task> tasks starts at 0
+//  -> json start at 1
+// sollte die json datei auch bei 0 starten?
+
+// TODO: fix add command
+//  -> komma hinter } vom letzten objekt fehlt
+//  -> neues objekt muss innerhalb der [] gesetzt werden
 
 std::filesystem::path GetExecutablePath()
 {
@@ -204,11 +210,12 @@ int main(int argc, char *argv[])
         std::string inner = s.substr(start + 1, end - start -1);
 
         // get values
-        int id = stoi(ExtractJsonValue(inner, "id"));
+        //int id = stoi(ExtractJsonValue(inner, "id"));
         std::string desc = ExtractJsonValue(inner, "description");
-        tasks.push_back(Task(id, desc));
+        tasks.push_back(Task(tasks.size()+1, desc));
     }
 
+    // Print every task
     for (auto task : tasks)
     {
         std::cout << "id: " << task.GetId() << "\n";
@@ -275,9 +282,10 @@ int main(int argc, char *argv[])
         }
         if (command == "add")
         {
-            auto newTask = Task(1, argv[2]);
+            size_t idx = tasks.size();
+            tasks.push_back(Task(idx, argv[2]));
             std::ostringstream oss;
-            newTask.ToJson(oss);
+            tasks[idx].ToJson(oss);
         
             // Write to File
             // if number of tasks > 0
@@ -285,7 +293,7 @@ int main(int argc, char *argv[])
             write_stream << oss.str() << "\n";
             write_stream.close();
             
-            std::cout << "Task added successfully (ID: " << newTask.GetId() << ")" 
+            std::cout << "Task added successfully (ID: " << tasks[idx].GetId() << ")" 
             << std::endl;
 
             read_stream.close();

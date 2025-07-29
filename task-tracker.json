@@ -1,16 +1,23 @@
 [
     {
         "id": 1,
-        "description": "new task3",
+        "description": "Buy some milk",
         "status": "TODO",
         "createdAt": "2025-07-29 11:03:18",
         "updatedAt": "null"
     },
     {
         "id": 2,
-        "description": "new task2",
+        "description": "Get Dog food",
         "status": "TODO",
         "createdAt": "2025-07-29 11:03:19",
         "updatedAt": "null"
-    }   
+    },   
+    {
+        "id": 3,
+        "description": "Buy fruit",
+        "status": "TODO",
+        "createdAt": "2025-07-29 19:44:17",
+        "updatedAt": "null"
+    }    
 ]
