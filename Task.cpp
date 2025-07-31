@@ -38,38 +38,42 @@ void Task::MarkTask(Status status)
 
 void Task::PrintTask(std::ostream& stream)
 {
-    stream 
-    << "[" << m_id << "] "
-    << m_description
-    << " (" << GetStatus() << ") "
-    << "created @ " << m_createdAt << "\n";
-    //<< "}\n";
-    //<< m_updatedAt << "}\n";
+    stream << "id: " << GetId() << "\n";
+    stream << "description: " << GetDescription() << "\n";
+    stream << "status: " << GetStatus() << "\n";
+    std::chrono::system_clock::time_point tp = GetCreatedAt();
+    stream << "createdAt: " << std::format("{:%F %T}", tp) << "\n";
+    std::optional<std::chrono::system_clock::time_point> opt_tp = GetUpdatedAt();
+    
+    opt_tp ? 
+    stream << "updatedAt: " << std::format("{:%F %T}", *opt_tp) << "\n"
+    : stream << "updatedAt: null" << "\n";
+    
 }
 
-void Task::ToJson(std::ostream& stream)
+void Task::ToJson(std::ostream& stream, int indent) const
 {
-    stream
-    << "{\n"
-    << "    \"id\": " << m_id << ",\n"
-    << "    \"description\": " << "\"" << m_description << "\",\n"
-    << "    \"status\": " << "\"" << GetStatus() << "\",\n"
-    << "    \"createdAt\": " << "\"" << m_createdAt << "\",\n"
-    << "    \"updatedAt\": " << "\"" << "null" << "\"\n"
-    << "}";
+    const std::string ind(indent, ' ');
+    stream  << ind << "{\n"
+            << ind << "    \"id\": " << m_id << ",\n"
+            << ind << "    \"description\": " << "\"" << m_description << "\",\n"
+            << ind << "    \"status\": " << "\"" << GetStatus() << "\",\n"
+            << ind << "    \"createdAt\": " << "\"" << m_createdAt << "\",\n"
+            << ind << "    \"updatedAt\": " << "\"" << "null" << "\"\n"
+            << ind << "}";
 }
 
-int Task::GetId()
+int Task::GetId() const
 {
     return m_id;
 }
 
-std::string_view Task::GetDescription()
+std::string_view Task::GetDescription() const
 {
     return m_description;
 }
 
-std::string_view Task::GetStatus()
+std::string_view Task::GetStatus() const
 {
     switch (m_status) 
     {
@@ -84,15 +88,19 @@ std::string_view Task::GetStatus()
     }   
 }
 
-std::chrono::system_clock::time_point Task::GetCreatedAt()
+std::chrono::system_clock::time_point Task::GetCreatedAt() const
 {
     return m_createdAt;
 }
-std::optional<std::chrono::system_clock::time_point> Task::GetUpdatedAt()
+std::optional<std::chrono::system_clock::time_point> Task::GetUpdatedAt() const
 {
     return m_updatedAt;
 }
 
+void Task::SetId(int id)
+{
+    m_id = id;
+}
 //Task CreateTaskFromString(const std::string& objectString)
 //{
 //    auto task = Task()

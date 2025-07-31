@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <chrono>
+#include <cstddef>
 #include <cstdio>
 #include <ctime>
 #include <fstream>
@@ -25,14 +26,16 @@
     #include <limits.h>
 #endif
 
-// TODO: fix indices 
-//  -> std::vector<Task> tasks starts at 0
-//  -> json start at 1
-// sollte die json datei auch bei 0 starten?
+// TODO:
+// die kommandos funktionieren einzeln, aber dadurch dass 
+// es jedes mal einen full rewrite gibt, werden die daten nur bedingt
+// gespeichert:
+// default wert von tasks ist TODO -> die status werte werden nur vom
+// letzten task gespeichert, da alle tasks jedes mal neu erstellt werden.
+// gleiches Problem bei den Zeitdaten
 
-// TODO: fix add command
-//  -> komma hinter } vom letzten objekt fehlt
-//  -> neues objekt muss innerhalb der [] gesetzt werden
+std::filesystem::path g_taskListPath;
+std::filesystem::path g_taskListPathTmp;
 
 std::filesystem::path GetExecutablePath()
 {
@@ -147,6 +150,52 @@ std::string ExtractJsonValue(const std::string& obj, const std::string& key)
     }
 }
 
+void WriteVectorToFile(std::vector<Task>& tasks)
+{
+    std::ofstream write_stream{g_taskListPathTmp, std::ios::app};
+    if (!write_stream)
+    {
+        std::cerr << g_taskListPathTmp << " Could not be opened for writing\n";
+        return ;
+    }
+
+    write_stream << "[\n";
+    for (size_t i = 0; i < tasks.size(); ++i)
+    {
+        tasks[i].ToJson(write_stream, 4);
+        if (i + 1 < tasks.size()) write_stream << ",";
+        write_stream << "\n";
+    }
+    write_stream << "]\n";
+    write_stream.close();
+}
+
+void AtomicReplace(const std::filesystem::path& orig, const std::filesystem::path& tmp)
+{
+    namespace fs = std::filesystem;
+    std::error_code ec;
+
+    // Delete original file if exists
+    if (fs::exists(orig, ec))
+    {
+        if (!fs::remove(orig, ec))
+        {
+            std::cerr << "Error while deleting " << orig << ": " << ec.message()
+            << "\n";
+            return;
+        }
+    }
+
+    // Rename tmp file
+    fs::rename(tmp, orig, ec);
+    if (ec)
+    {
+        std::cerr << "Error while renaming " << tmp << ": " << ec.message()
+        << "\n";
+        return;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     if (argc < 2)
@@ -159,14 +208,9 @@ int main(int argc, char *argv[])
         std::cout << "Ignoring everything after \"" << argv[2] << "\"\n";
     }
     auto exeDir = GetExecutablePath();
-    auto g_taskListPath = exeDir / "../task-tracker.json";
-
-    // Testing:
-    //char cwd[_MAX_PATH];
-    //if (_getcwd(cwd, _MAX_PATH)) {
-    //    std::cout << "Working Dir: " << cwd << "\n";
-    //} else 
-    //    std::cerr << "_getcwd failed";
+    g_taskListPath = exeDir / "../task-tracker.json";
+    g_taskListPathTmp = exeDir / "../task-tracker.json.tmp";
+    //g_taskListPathTmp = g_taskListPath.concat(".tmp");
 
     // ******************** READ JSON ********************
     
@@ -207,7 +251,7 @@ int main(int argc, char *argv[])
         // Get string inside {}
         auto start = s.find('{');
         auto end = s.find('}');
-        std::string inner = s.substr(start + 1, end - start -1);
+        std::string inner = s.substr(start, end - start -1);
 
         // get values
         //int id = stoi(ExtractJsonValue(inner, "id"));
@@ -216,22 +260,10 @@ int main(int argc, char *argv[])
     }
 
     // Print every task
-    for (auto task : tasks)
-    {
-        std::cout << "id: " << task.GetId() << "\n";
-        std::cout << "description: " << task.GetDescription() << "\n";
-        std::cout << "status: " << task.GetStatus() << "\n";
-        std::chrono::system_clock::time_point tp = task.GetCreatedAt();
-        std::cout << "createdAt: " << std::format("{:%F %T}", tp) << "\n";
-        std::optional<std::chrono::system_clock::time_point> opt_tp = task.GetUpdatedAt();
-        if (opt_tp)
-        {
-            std::cout << "updatedAt: " << std::format("{:%F %T}", *opt_tp) << "\n";
-        }
-        else {
-            std::cout << "updatedAt: null" << "\n";
-        }
-    }
+    //for (auto task : tasks)
+    //{
+    //    task.PrintTask(std::cout);
+    //}
 
     // **************** READ USER INPUT ****************
     
@@ -283,44 +315,46 @@ int main(int argc, char *argv[])
         if (command == "add")
         {
             size_t idx = tasks.size();
-            tasks.push_back(Task(idx, argv[2]));
-            std::ostringstream oss;
-            tasks[idx].ToJson(oss);
-        
-            // Write to File
-            // if number of tasks > 0
-            // write_stream << ",";
-            write_stream << oss.str() << "\n";
-            write_stream.close();
+            tasks.push_back(Task(idx+1, argv[2]));
             
             std::cout << "Task added successfully (ID: " << tasks[idx].GetId() << ")" 
             << std::endl;
-
-            read_stream.close();
-            return 0;
         }
         if (command == "update")
         {
+            int id = std::stoi(argv[2]) - 1;
+            std::string newDesc = argv[3];
 
+            tasks[id].UpdateTask(newDesc);
         }
         if (command == "delete")
         {
+            int id = std::stoi(argv[2]) - 1;
+            tasks.erase(tasks.begin() + id);
 
+            // update ids to be continous
+            // if this is not wanted and ids
+            // are expected to be unique -> skip this step
+            for (size_t i = 0; i < tasks.size(); ++i)
+            {
+                tasks[i].SetId(static_cast<int>(i) + 1);
+            }
         }
         if (command == "mark-in-progress")
         {
-
+            int id = std::stoi(argv[2]) - 1;
+            tasks[id].MarkTask(Task::Status::IN_PROGRESS);
         }
         if (command == "mark-done")
         {
-
+            int id = std::stoi(argv[2]) - 1;
+            tasks[id].MarkTask(Task::Status::DONE);
         }
-    }
-    
-    
 
-    if (read_stream.is_open()) 
-        read_stream.close();
-    
+        WriteVectorToFile(tasks);
+        if(read_stream.is_open()) read_stream.close();
+        if(write_stream.is_open()) write_stream.close();
+        AtomicReplace(g_taskListPath, g_taskListPathTmp);
+    }    
     return 0;
 }

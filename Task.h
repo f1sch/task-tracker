@@ -7,11 +7,12 @@
 
 class Task
 {
+public:
     enum class Status 
     {
         TODO, IN_PROGRESS, DONE
     };
-public:
+    
     Task(int id, std::string description);
     ~Task() = default;
 
@@ -21,15 +22,19 @@ public:
 
     // helper
     void PrintTask(std::ostream& stream);
-    void ToJson(std::ostream& stream);
+    void ToJson(std::ostream& stream, int ident = 4) const;
     Task CreateTaskFromString(const std::string& objectString);
     
     // Getter
-    int GetId();
-    std::string_view GetDescription();
-    std::string_view GetStatus();
-    std::chrono::system_clock::time_point GetCreatedAt();
-    std::optional<std::chrono::system_clock::time_point> GetUpdatedAt();
+    int GetId() const;
+    std::string_view GetDescription() const;
+    std::string_view GetStatus() const;
+    std::chrono::system_clock::time_point GetCreatedAt() const;
+    std::optional<std::chrono::system_clock::time_point> GetUpdatedAt() const;
+
+    // Setter
+    void SetId(int id);
+    //void SetDescription(std::string newDesc);
 
 private:
     int         m_id;

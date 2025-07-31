@@ -3,21 +3,21 @@
         "id": 1,
         "description": "Buy some milk",
         "status": "TODO",
-        "createdAt": "2025-07-29 11:03:18",
+        "createdAt": "2025-07-31 20:29:28",
         "updatedAt": "null"
     },
     {
         "id": 2,
-        "description": "Get Dog food",
-        "status": "TODO",
-        "createdAt": "2025-07-29 11:03:19",
+        "description": "Drive my car",
+        "status": "DONE",
+        "createdAt": "2025-07-31 20:29:28",
         "updatedAt": "null"
-    },   
+    },
     {
         "id": 3,
-        "description": "Buy fruit",
+        "description": "Buy Eggs",
         "status": "TODO",
-        "createdAt": "2025-07-29 19:44:17",
+        "createdAt": "2025-07-31 20:29:28",
         "updatedAt": "null"
-    }    
+    }
 ]
