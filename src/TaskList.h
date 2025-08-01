@@ -22,10 +22,11 @@ public:
     void PrintAllTasks();
     // Size
     size_t Size() const noexcept { return tasks_.size(); }
-private:
+    
     // Filter
     std::vector<Task> GetByStatus(Task::Status s) const;
     std::vector<Task> FindByKeyWord(std::string_view word) const;
+private:
 
     // Modify
     std::vector<std::string> SplitTasks(const std::string& json);
