@@ -19,13 +19,13 @@ std::ostream& operator<<(std::ostream& os, chrono::system_clock::time_point tp)
     return os;
 }
 
-Task::Task(int id, std::string description)
-    : m_id(id), m_description(std::move(description)), m_status(Status::TODO)
+Task::Task(int id, std::string_view description)
+    : m_id(id), m_description(description), m_status(Status::TODO)
 {
      m_createdAt = chrono::system_clock::now();
 }
 
-void Task::UpdateTask(std::string description)
+void Task::UpdateTask(std::string_view description)
 {
     m_description = description;
     m_updatedAt = chrono::system_clock::now();
@@ -36,11 +36,11 @@ void Task::MarkTask(Status status)
     m_status = status;
 }
 
-void Task::PrintTask(std::ostream& stream)
+void Task::PrintTask(std::ostream& stream) const noexcept
 {
     stream << "id: " << GetId() << "\n";
     stream << "description: " << GetDescription() << "\n";
-    stream << "status: " << GetStatus() << "\n";
+    stream << "status: " << toString(GetStatus()) << "\n";
     std::chrono::system_clock::time_point tp = GetCreatedAt();
     stream << "createdAt: " << std::format("{:%F %T}", tp) << "\n";
     std::optional<std::chrono::system_clock::time_point> opt_tp = GetUpdatedAt();
@@ -57,7 +57,7 @@ void Task::ToJson(std::ostream& stream, int indent) const
     stream  << ind << "{\n"
             << ind << "    \"id\": " << m_id << ",\n"
             << ind << "    \"description\": " << "\"" << m_description << "\",\n"
-            << ind << "    \"status\": " << "\"" << GetStatus() << "\",\n"
+            << ind << "    \"status\": " << "\"" << toString(GetStatus()) << "\",\n"
             << ind << "    \"createdAt\": " << "\"" << m_createdAt << "\",\n"
             << ind << "    \"updatedAt\": " << "\"" << "null" << "\"\n"
             << ind << "}";
@@ -73,21 +73,6 @@ std::string_view Task::GetDescription() const
     return m_description;
 }
 
-std::string_view Task::GetStatus() const
-{
-    switch (m_status) 
-    {
-        case Status::TODO:
-            return "TODO";
-        case Status::IN_PROGRESS:
-            return "IN PROGRESS";
-        case Status::DONE:
-            return "DONE";
-        default:
-            return "NO STATUS";
-    }   
-}
-
 std::chrono::system_clock::time_point Task::GetCreatedAt() const
 {
     return m_createdAt;
@@ -101,7 +86,3 @@ void Task::SetId(int id)
 {
     m_id = id;
 }
-//Task CreateTaskFromString(const std::string& objectString)
-//{
-//    auto task = Task()
-//}

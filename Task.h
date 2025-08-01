@@ -13,22 +13,33 @@ public:
         TODO, IN_PROGRESS, DONE
     };
     
-    Task(int id, std::string description);
+    Task(int id, std::string_view description);
     ~Task() = default;
 
     // change task
-    void UpdateTask(std::string description);
+    void UpdateTask(std::string_view description);
     void MarkTask(Status status);
 
     // helper
-    void PrintTask(std::ostream& stream);
+    void PrintTask(std::ostream& stream) const noexcept;
     void ToJson(std::ostream& stream, int ident = 4) const;
+    static constexpr std::string_view toString(Status s) noexcept
+    {
+        switch(s)
+        {
+            case Status::TODO: return "TODO";
+            case Status::IN_PROGRESS: return "IN_PROGRESS";
+            case Status::DONE: return "DONE";
+        }
+
+        return {};
+    }
     Task CreateTaskFromString(const std::string& objectString);
     
     // Getter
     int GetId() const;
     std::string_view GetDescription() const;
-    std::string_view GetStatus() const;
+    constexpr Status GetStatus() const noexcept { return m_status; };
     std::chrono::system_clock::time_point GetCreatedAt() const;
     std::optional<std::chrono::system_clock::time_point> GetUpdatedAt() const;
 

@@ -22,6 +22,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 set(SOURCES
     main.cpp
     Task.cpp
+    TaskList.cpp
 )
 
 # 5) Executable erzeugen
