@@ -2,10 +2,43 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstddef>
 #include <cstdlib>
+#include <cstring>
+#include <exception>
 #include <iostream>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
+
+std::optional<size_t> ParseTaskIndex(char const* userInput, size_t maxTasks)
+{
+    unsigned long userIdx = 0;
+    try {
+        size_t pos = 0;
+        userIdx = std::stoul(userInput, &pos);
+        if (pos != std::strlen(userInput))
+        {
+            throw std::invalid_argument{"Extra characters"};
+        }
+    } 
+    catch (const std::exception&)
+    {
+        std::cerr << "Error: " << userInput
+            << " is not a valid positive integer\n";
+            return std::nullopt;
+    }
+
+    if (userIdx == 0 || userIdx > maxTasks)
+    {
+        std::cerr << "Error: Task with index " << userIdx
+            << " does not exist (valid: 1..." << maxTasks << ")\n";
+        return std::nullopt;
+    }
+
+    return static_cast<size_t>(userIdx-1);
+}
 
 int main(int argc, char *argv[])
 {
@@ -44,26 +77,26 @@ int main(int argc, char *argv[])
             }
             if (arg == "delete")
             {
-                size_t idx = std::stoi(argv[2]);
-                if (idx > tasks.Size() || idx < 0)
-                {
-                    std::cout << "Error: Task with index " << idx << " does not"
-                    << "exist" << std::endl;
+                auto maybeIdx = ParseTaskIndex(
+                    argv[2], tasks.Size());
+
+                if (!maybeIdx)
                     return EXIT_FAILURE;
-                }
+
+                if (tasks.RemoveTask(*maybeIdx))
+                    return EXIT_SUCCESS;
                 else 
                 {
-                    if (idx > 0) 
-                        idx--;
-                    if (tasks.RemoveTask(idx))
-                        return EXIT_SUCCESS;
-                    else
-                        return EXIT_FAILURE;
+                    std::cerr << "Error: Could not delete task"
+                        << ( *maybeIdx + 1) << "\n";
+                    return EXIT_FAILURE;
                 }
             }
             if (arg == "mark-in-progress")
             {
-                tasks.MarkTask(std::stoi(argv[2]), Task::Status::IN_PROGRESS);
+                auto maybeIdx = ParseTaskIndex(
+                    argv[2], tasks.Size());
+                tasks.MarkTask(*maybeIdx, Task::Status::IN_PROGRESS);
                 return EXIT_SUCCESS;
             }
             if (arg == "mark-done")
@@ -73,52 +106,27 @@ int main(int argc, char *argv[])
             }
             if (arg == "list")
             {
-
                 auto arg = std::string(argv[2]);
                 std::transform(
                 arg.begin(), arg.end(), arg.begin(),
             [](unsigned char c) { return std::tolower(c); });
                 tasks.ListTasks(arg);
-
-                //arg = argv[2];
-                //
-                //if (arg == "done")
-                //{
-                //    tasks.ListTasks(Task::Status::DONE);
-                //    return EXIT_SUCCESS;
-                //}
-                //if (arg == "todo")
-                //{
-                //    tasks.ListTasks(Task::Status::TODO);
-                //    return EXIT_SUCCESS;
-                //}
-                //if (arg == "in-progress")
-                //{
-                //    tasks.ListTasks(Task::Status::IN_PROGRESS);
-                //    return EXIT_SUCCESS;
-                //}
             }
         } break;
         case 4:
         {
             if (arg == "update")
             {
-                int idx = std::stoi(argv[2]);
-                if (idx > 0) 
-                    idx--;
-                if (idx < 0)
-                {
-                    std::cout << "Error: Task with index " << idx 
-                        << "does not exist" << std::endl;
+                auto maybeIdx = ParseTaskIndex(
+                    argv[2], tasks.Size());
+                
+                if (!maybeIdx)
                     return EXIT_FAILURE;
-                }
-                else 
-                {
-                    tasks.UpdateTask(idx, argv[3]);
-                    return EXIT_SUCCESS;
-                }
-                std::cout << "Error: something went wrong" << std::endl;
-                return EXIT_FAILURE;
+
+                return tasks.UpdateTask(*maybeIdx, argv[3])
+                    ? EXIT_SUCCESS
+                    : (std::cerr << "Error: Could not update task" 
+                        << *maybeIdx << "\n", EXIT_FAILURE);
             }
         } break;
         default:

@@ -97,9 +97,9 @@ void TaskList::AddTask(std::string_view desc)
     tasks_.push_back(std::move(task));
 }
 
-void TaskList::UpdateTask(size_t index, std::string_view desc)
+bool TaskList::UpdateTask(size_t index, std::string desc)
 {
-    tasks_[index].UpdateTask(desc);
+    return tasks_[index].UpdateTask(desc);
 }
 
 bool TaskList::RemoveTask(size_t index)

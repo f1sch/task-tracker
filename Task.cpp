@@ -25,10 +25,11 @@ Task::Task(int id, std::string_view description)
      m_createdAt = chrono::system_clock::now();
 }
 
-void Task::UpdateTask(std::string_view description)
+bool Task::UpdateTask(std::string_view description)
 {
     m_description = description;
     m_updatedAt = chrono::system_clock::now();
+    return true;
 }
 
 void Task::MarkTask(Status status)

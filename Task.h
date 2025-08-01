@@ -17,7 +17,7 @@ public:
     ~Task() = default;
 
     // change task
-    void UpdateTask(std::string_view description);
+    bool UpdateTask(std::string_view description);
     void MarkTask(Status status);
 
     // helper

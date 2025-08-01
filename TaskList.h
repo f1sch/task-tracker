@@ -13,7 +13,7 @@ public:
 
     // CRUD
     void AddTask(std::string_view desc);
-    void UpdateTask(size_t index, std::string_view desc);
+    bool UpdateTask(size_t index, std::string desc);
     bool RemoveTask(size_t index);
     void MarkTask(size_t index, Task::Status);
     void ListTasks(std::string s);
