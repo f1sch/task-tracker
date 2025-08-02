@@ -10,9 +10,225 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 
-std::optional<size_t> ParseTaskIndex(char const* userInput, size_t maxTasks)
+// Structs
+struct Command 
+{
+    enum class Type 
+    {
+        LIST, ADD, DELETE, MARK_IN_PROGRESS, MARK_DONE, UPDATE, INVALID
+    };
+    Type type;
+    std::string description;
+    std::optional<size_t> taskIndex;
+    std::string filter;
+};
+
+// Forward declarations
+std::optional<Command> ParseArguments(int argc, char* argv[]);
+bool ExecuteCommand(const Command& cmd, TaskList& tasks);
+std::optional<size_t> ParseTaskIndex(char const* userInput);
+void PrintUsage(const char* progName);
+
+
+std::optional<Command> ParseArguments(int argc, char* argv[])
+{
+    // Input Validation
+    if (argc <= 0 || argv == nullptr || argv[1] == nullptr)
+    {
+        std::cerr << "Error: invalid arguments" << std::endl;
+        return std::nullopt;
+    }
+    
+    if (argc == 1)
+    {
+        std::cerr << "Error: no arguments" << std::endl;
+        return std::nullopt;
+    }
+
+    // Command Recognition && Argument Count Validation
+    std::string arg1 = argv[1];
+    std::transform(arg1.begin(), arg1.end(), arg1.begin(),
+    [](unsigned char c) { return std::tolower(c); });
+    Command command = {};
+    
+    if (arg1 == "list")
+    {
+        if (argc != 2 && argc != 3)
+        {
+            std::cerr << "Error: wrong number of arguments" << std::endl;
+            return std::nullopt;
+        }
+        command.type = Command::Type::LIST;
+        if (argc == 2)
+            return command;
+        else
+        {
+            std::string filter = argv[2];
+            std::transform(
+                filter.begin(), filter.end(), filter.begin(),
+                [](unsigned char c) { return std::tolower(c); }
+            );
+            command.filter = filter;
+            return command;
+        }
+    }
+    else if (arg1 == "add")
+    {   
+        if (argc != 3)
+        {
+            std::cerr << "Error: wrong number of arguments" << std::endl;
+            return std::nullopt;
+        }
+        command.type = Command::Type::ADD;
+        std::string description = argv[2];
+        if (!description.empty())
+        {
+            command.description = description;
+            return command;
+        }
+        else 
+        {
+            std::cerr << "Error: description is empty" << std::endl;
+            return std::nullopt;
+        }
+    }
+    else if (arg1 == "delete")
+    {
+        if (argc != 3)
+        {
+            std::cerr << "Error: wrong number of arguments" << std::endl;
+            return std::nullopt;
+        }
+        command.type = Command::Type::DELETE;
+        std::optional<size_t> userIdx = ParseTaskIndex(argv[2]);
+        
+        if (userIdx)
+        {
+            command.taskIndex = userIdx;
+            return command;
+        }
+        else 
+        {
+            return std::nullopt;
+        }
+    }
+    else if (arg1 == "update")
+    {
+        if (argc != 4)
+        {
+            std::cerr << "Error: wrong number of arguments" << std::endl;
+            return std::nullopt;
+        }
+        command.type = Command::Type::UPDATE;
+
+        std::optional<size_t> userIdx = ParseTaskIndex(argv[2]);
+        if (!userIdx)
+        {
+            std::cerr << "Error: index is invalid index format" << std::endl;
+            return std::nullopt;
+        } 
+        command.taskIndex = userIdx;
+        std::string description = argv[3];
+        if (!description.empty())
+        {
+            command.description = description;
+            return command;
+        }
+        else 
+        {
+            std::cerr << "Error: description is empty" << std::endl;
+            return std::nullopt;
+        }
+    }
+    else if (arg1 == "mark-in-progress")
+    {
+        if (argc != 3)
+        {
+            std::cerr << "Error: wrong number of arguments" << std::endl;
+            return std::nullopt;
+        }
+        command.type = Command::Type::MARK_IN_PROGRESS;
+        std::optional<size_t> userIdx = ParseTaskIndex(argv[2]);
+        if (userIdx)
+        {
+            command.taskIndex = userIdx;
+            return command;
+        }
+        else 
+        {
+            return std::nullopt;
+        }
+    }
+    else if (arg1 == "mark-done")
+    {
+        if (argc != 3)
+        {
+            std::cerr << "Error: wrong number of arguments" << std::endl;
+            return std::nullopt;
+        }
+        command.type = Command::Type::MARK_DONE;
+        std::optional<size_t> userIdx = ParseTaskIndex(argv[2]);
+        if (userIdx)
+        {
+            command.taskIndex = userIdx;
+            return command;
+        }
+        else 
+        {
+            return std::nullopt;
+        }
+    }
+    else
+    {
+        command.type = Command::Type::INVALID;
+        std::cerr << "Error: unknown or invalid command" << std::endl;
+        return std::nullopt;
+    }
+
+    // Parameter Extraction and Validation
+
+    return command;
+}
+
+bool ExecuteCommand(const Command& cmd, TaskList& tasks)
+{
+    switch (cmd.type) {
+        case Command::Type::LIST:
+            if (cmd.filter.empty())
+            {
+                tasks.PrintAllTasks();
+            }
+            else 
+            {
+                tasks.ListTasks(cmd.filter);
+            }
+            break;
+        case Command::Type::ADD:
+            tasks.AddTask(cmd.description);
+            break;
+        case Command::Type::UPDATE:
+            tasks.UpdateTask(*cmd.taskIndex, cmd.description);
+            break;
+        case Command::Type::DELETE:
+            tasks.RemoveTask(*cmd.taskIndex);
+            break;
+        case Command::Type::MARK_DONE:
+            tasks.MarkTask(*cmd.taskIndex, Task::Status::DONE);
+            break;
+        case Command::Type::MARK_IN_PROGRESS:
+            tasks.MarkTask(*cmd.taskIndex, Task::Status::IN_PROGRESS);
+            break;
+        case Command::Type::INVALID:
+            std::cerr << "Error: Invalid command type" << std::endl;
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
+std::optional<size_t> ParseTaskIndex(char const* userInput)
 {
     unsigned long userIdx = 0;
     try {
@@ -30,109 +246,39 @@ std::optional<size_t> ParseTaskIndex(char const* userInput, size_t maxTasks)
             return std::nullopt;
     }
 
-    if (userIdx == 0 || userIdx > maxTasks)
+    if (userIdx == 0)
     {
-        std::cerr << "Error: Task with index " << userIdx
-            << " does not exist (valid: 1..." << maxTasks << ")\n";
+        std::cerr << "Error: Task with index 0 does not exist" << std::endl; 
         return std::nullopt;
     }
 
     return static_cast<size_t>(userIdx-1);
 }
+void PrintUsage(const char* progName)
+{
+    std::cout 
+    << "Usage: " << progName << " <command> [options]\n"
+    << "Commands:\n"
+    << "  add \"<task description>\"            Add a new Task\n"
+    << "  update <id> \"<new description>\"     Update an existing task\n"
+    << "  delete <id>                           Delete a task\n"
+    << "  mark-in-progress <id>                 Mark task as in-progress\n"
+    << "  mark-done <id>                        Mark task as done\n"
+    << "  list [status]                         List tasks (optional status: "
+    << "todo, in-progress, done)\n\n";
+}
 
 int main(int argc, char *argv[])
 {
+    auto command = ParseArguments(argc, argv);
+    if (!command)
+    {
+        PrintUsage(argv[0]);
+        return EXIT_FAILURE;
+    }
+    
     // Create TaskList to get data
     auto tasks = TaskList();
-
-    // Read arguments
-    std::string arg = argv[1];
-    std::transform(arg.begin(), arg.end(), arg.begin(),
-    [](unsigned char c) { return std::tolower(c); });
-    switch (argc) {
-        case 0:
-            std::cerr << "Error: no exe" << std::endl;
-            return EXIT_FAILURE;
-        
-        case 1:
-            // TODO: show usage of program
-            std::cout << "Error: no argument" << std::endl;
-            return EXIT_FAILURE;
-    
-        case 2:
-            if (arg == "list")
-            {
-                tasks.PrintAllTasks();
-                return EXIT_SUCCESS;
-            }
-            else
-                return EXIT_FAILURE;
-        
-        case 3:
-        {   
-            if (arg == "add")
-            {
-                tasks.AddTask(argv[2]);
-                return EXIT_SUCCESS;
-            }
-            if (arg == "delete")
-            {
-                auto maybeIdx = ParseTaskIndex(
-                    argv[2], tasks.Size());
-
-                if (!maybeIdx)
-                    return EXIT_FAILURE;
-
-                if (tasks.RemoveTask(*maybeIdx))
-                    return EXIT_SUCCESS;
-                else 
-                {
-                    std::cerr << "Error: Could not delete task"
-                        << ( *maybeIdx + 1) << "\n";
-                    return EXIT_FAILURE;
-                }
-            }
-            if (arg == "mark-in-progress")
-            {
-                auto maybeIdx = ParseTaskIndex(
-                    argv[2], tasks.Size());
-                tasks.MarkTask(*maybeIdx, Task::Status::IN_PROGRESS);
-                return EXIT_SUCCESS;
-            }
-            if (arg == "mark-done")
-            {
-                tasks.MarkTask(std::stoi(argv[2]), Task::Status::DONE);
-                return EXIT_SUCCESS;
-            }
-            if (arg == "list")
-            {
-                auto arg = std::string(argv[2]);
-                std::transform(
-                arg.begin(), arg.end(), arg.begin(),
-            [](unsigned char c) { return std::tolower(c); });
-                tasks.ListTasks(arg);
-            }
-        } break;
-        case 4:
-        {
-            if (arg == "update")
-            {
-                auto maybeIdx = ParseTaskIndex(
-                    argv[2], tasks.Size());
-                
-                if (!maybeIdx)
-                    return EXIT_FAILURE;
-
-                return tasks.UpdateTask(*maybeIdx, argv[3])
-                    ? EXIT_SUCCESS
-                    : (std::cerr << "Error: Could not update task" 
-                        << *maybeIdx << "\n", EXIT_FAILURE);
-            }
-        } break;
-        default:
-            std::cout << "Error: no valid argument" << std::endl;
-            return EXIT_FAILURE;
-    }
-     
-    return 0;
+    return ExecuteCommand(*command, tasks)
+        ? EXIT_SUCCESS : EXIT_FAILURE;
 }
