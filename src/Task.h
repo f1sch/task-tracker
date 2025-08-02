@@ -47,6 +47,10 @@ public:
     std::chrono::system_clock::time_point GetCreatedAt() const { return m_createdAt; };
     std::optional<std::chrono::system_clock::time_point> GetUpdatedAt() const { return m_updatedAt; };
 
+    // Helper methods for time formatting
+    std::string GetCreatedAtString() const;
+    std::string GetUpdatedAtString() const;
+
     // Setter
     void SetId(int id) noexcept { m_id = id; };
     //void SetDescription(std::string newDesc);

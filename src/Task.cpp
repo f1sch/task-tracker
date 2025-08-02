@@ -3,6 +3,7 @@
 #include <ctime>
 #include <iomanip>
 #include <ostream>
+#include <sstream>
 
 namespace chrono = std::chrono;
 
@@ -50,12 +51,11 @@ void Task::PrintTask(std::ostream& stream) const noexcept
     stream << "id: " << GetId() << "\n";
     stream << "description: " << GetDescription() << "\n";
     stream << "status: " << toString(GetStatus()) << "\n";
-    std::chrono::system_clock::time_point tp = GetCreatedAt();
-    stream << "createdAt: " << std::format("{:%F %T}", tp) << "\n";
+    stream << "createdAt: " << GetCreatedAt() << "\n";
     std::optional<std::chrono::system_clock::time_point> opt_tp = GetUpdatedAt();
     
     opt_tp ? 
-    stream << "updatedAt: " << std::format("{:%F %T}", *opt_tp) << "\n"
+    stream << "updatedAt: " << *opt_tp << "\n"
     : stream << "updatedAt: null" << "\n";
     
 }
@@ -70,4 +70,21 @@ void Task::ToJson(std::ostream& stream, int indent) const
             << ind << "    \"createdAt\": " << "\"" << m_createdAt << "\",\n"
             << ind << "    \"updatedAt\": " << "\"" << "null" << "\"\n"
             << ind << "}";
+}
+
+std::string Task::GetCreatedAtString() const
+{
+    std::ostringstream oss;
+    oss << m_createdAt;
+    return oss.str();
+}
+
+std::string Task::GetUpdatedAtString() const
+{
+    if (m_updatedAt.has_value()) {
+        std::ostringstream oss;
+        oss << m_updatedAt.value();
+        return oss.str();
+    }
+    return "null";
 }

@@ -4,6 +4,7 @@
 #include <optional>
 #include <string_view>
 #include <filesystem>
+#include <chrono>
 
 class TaskList
 {
@@ -19,7 +20,7 @@ public:
     bool ListTasks(std::string s);
 
     // Helper
-    void PrintAllTasks();
+    void PrintAllTasks() const;
     // Size
     size_t Size() const noexcept { return tasks_.size(); }
     
@@ -32,6 +33,7 @@ private:
     std::vector<std::string> SplitTasks(const std::string& json);
     std::string ExtractJsonValue(const std::string& obj, const std::string& key);
     std::optional<Task::Status> ParseStatus(std::string_view sv);
+    std::chrono::system_clock::time_point ParseDateTimeString(const std::string& dateStr);
     
     // File management
     std::filesystem::path GetExecutablePath();

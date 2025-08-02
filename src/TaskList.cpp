@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
+#include <ctime>
 #include <direct.h>
 #include <fstream>
 #include <iostream>
@@ -10,6 +12,7 @@
 #include <limits.h>
 #include <ostream>
 #include <sstream>
+#include <string>
 #include <string_view>
 #include <system_error>
 #include <vector>
@@ -68,8 +71,29 @@ TaskList::TaskList()
         std::string inner = s.substr(start, end - start -1);
 
         // Get values
+        // TODO: needs checking
+        int id = std::stoi(ExtractJsonValue(inner, "id"));
         std::string desc = ExtractJsonValue(inner, "description");
-        tasks_.push_back(Task(tasks_.size()+1, desc));
+        auto status = 
+            ParseStatus(ExtractJsonValue(inner, "status"));
+        if (!status)
+        {
+            std::cerr << "Error: Invalid status value in JSON\n";
+            return;
+        }
+        std::string createdAt = ExtractJsonValue(inner, "createdAt");
+        std::string updatedAt = ExtractJsonValue(inner, "updatedAt");
+        
+        // Parse date strings to time_point objects
+        auto createdAtTp = ParseDateTimeString(createdAt);
+        std::optional<std::chrono::system_clock::time_point> updatedAtTp;
+        if (updatedAt != "null") {
+            updatedAtTp = ParseDateTimeString(updatedAt);
+        }
+        
+        tasks_.push_back(
+            Task(id, desc, *status, 
+                createdAtTp, updatedAtTp));
     }
     if(read_stream.is_open()) read_stream.close();
 }
@@ -190,7 +214,7 @@ bool TaskList::ListTasks(std::string s)
     return true;
 }
 
-void TaskList::PrintAllTasks()
+void TaskList::PrintAllTasks() const
 {
     for (auto const& task : tasks_)
     {
@@ -384,7 +408,10 @@ std::optional<Task::Status> TaskList::ParseStatus(std::string_view sv)
     {
         {"todo", Task::Status::TODO},
         {"in-progress", Task::Status::IN_PROGRESS},
-        {"done", Task::Status::DONE}
+        {"done", Task::Status::DONE},
+        {"TODO", Task::Status::TODO},
+        {"IN_PROGRESS", Task::Status::IN_PROGRESS},
+        {"DONE", Task::Status::DONE}
     };
 
     auto it = std::find_if(std::begin(table), std::end(table),
@@ -394,4 +421,21 @@ std::optional<Task::Status> TaskList::ParseStatus(std::string_view sv)
         return it->second;
     
     return std::nullopt;
+}
+
+std::chrono::system_clock::time_point TaskList::ParseDateTimeString(const std::string& dateStr)
+{
+    // Expected format: "2024-01-15 14:30:25"
+    std::tm tm = {};
+    std::istringstream ss(dateStr);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+    
+    if (ss.fail()) {
+        // If parsing fails, return current time as fallback
+        return std::chrono::system_clock::now();
+    }
+    
+    // Convert tm to time_t, then to time_point
+    std::time_t time = std::mktime(&tm);
+    return std::chrono::system_clock::from_time_t(time);
 }
