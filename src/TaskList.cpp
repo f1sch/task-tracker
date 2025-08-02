@@ -3,17 +3,15 @@
 
 #include <algorithm>
 #include <cctype>
+#include <direct.h>
 #include <fstream>
 #include <iostream>
-#include <ostream>
 #include <iterator>
+#include <limits.h>
+#include <ostream>
 #include <sstream>
 #include <string_view>
 #include <system_error>
-
-// Get working dir
-#include <direct.h>
-#include <limits.h>
 #include <vector>
 
 #ifdef _WIN32
@@ -30,7 +28,7 @@ TaskList::TaskList()
     g_taskListPath = exeDir / "../task-tracker.json";
     g_taskListPathTmp = exeDir / "../task-tracker.json.tmp";
 
-    // open JSON file
+    // Open JSON file
     // Create reading stream to json file
     std::ifstream read_stream{g_taskListPath};
     if (!read_stream)
@@ -39,8 +37,8 @@ TaskList::TaskList()
         return;
     }
 
-    // read JSON file
-    // stream whole file into as one string
+    // Read JSON file
+    // Stream whole file into as one string
     std::string wholeJsonFile;
     {
         std::ostringstream oss;
@@ -53,15 +51,15 @@ TaskList::TaskList()
         return;
     }
 
-    // get every task object as a string
+    // Get every task object as a string
     auto tasksJson = SplitTasks(wholeJsonFile);
     if (tasksJson.empty())
     {
         std::cerr << "Error: tasksJson is empty\n";
         return;
     }
-    // save data in tasks_
-    // convert task object strings to Task object
+    // Save data in tasks_
+    // Convert task object strings to Task object
     for (auto const& s : tasksJson)
     {
         // Get string inside {}
@@ -69,8 +67,7 @@ TaskList::TaskList()
         auto end = s.find('}');
         std::string inner = s.substr(start, end - start -1);
 
-        // get values
-        //int id = stoi(ExtractJsonValue(inner, "id"));
+        // Get values
         std::string desc = ExtractJsonValue(inner, "description");
         tasks_.push_back(Task(tasks_.size()+1, desc));
     }
@@ -91,35 +88,96 @@ TaskList::~TaskList()
     AtomicReplace(g_taskListPath, g_taskListPathTmp);
 }
 
-void TaskList::AddTask(std::string_view desc)
+bool TaskList::AddTask(std::string_view desc)
 {
-    Task task = Task(tasks_.size()+1, desc);
+    // Validate input
+    if (desc.empty()) 
+    {
+        return false;
+    }
+    
+    // Check for reasonable length
+    if (desc.length() > 1000) 
+    {
+        return false;
+    }
+    
+    // Perform operation
+    Task task = Task(tasks_.size() + 1, desc);
     tasks_.push_back(std::move(task));
+    
+    return true;
 }
 
 bool TaskList::UpdateTask(size_t index, std::string desc)
 {
+    // Validate bounds
+    if (index >= tasks_.size()) 
+    {
+        return false;
+    }
+    
+    // Validate input
+    if (desc.empty()) 
+    {
+        return false;
+    }
+    
+    // Delegate to Task class
     return tasks_[index].UpdateTask(desc);
 }
 
 bool TaskList::RemoveTask(size_t index)
 {
-    if (index >= tasks_.size()) return false;
+    // Validate bounds
+    if (index >= tasks_.size()) 
+    {
+        return false;
+    }
+    
+    // Check if vector is not empty
+    if (tasks_.empty()) 
+    {
+        return false;
+    }
+    
     tasks_.erase(tasks_.begin() + index);
     return true;
 }
 
-void TaskList::MarkTask(size_t index, Task::Status status)
+bool TaskList::MarkTask(size_t index, Task::Status status)
 {
+    // Validate bounds
+    if (index >= tasks_.size()) 
+    {
+        return false;
+    }
+    
+    // Validate status 
+    if (status != Task::Status::TODO 
+        && status != Task::Status::IN_PROGRESS 
+        && status != Task::Status::DONE) 
+    {
+        return false;
+    }
+    
     tasks_[index].MarkTask(status);
+    return true;
 }
 
-void TaskList::ListTasks(std::string s)
+bool TaskList::ListTasks(std::string s)
 {
     std::optional<Task::Status> status = ParseStatus(s);
     if (status)
     {
-        for (auto task : GetByStatus(status.value()))
+        auto tasks = GetByStatus(status.value());
+        if (tasks.empty()) 
+        {
+            std::cout << "No tasks found with status: " << s << std::endl;
+            return true;  // Not an error, just no results
+        }
+        
+        for (auto task : tasks)
         {
             task.PrintTask(std::cout);
         }
@@ -128,6 +186,8 @@ void TaskList::ListTasks(std::string s)
     {
         PrintAllTasks();
     }
+    
+    return true;
 }
 
 void TaskList::PrintAllTasks()

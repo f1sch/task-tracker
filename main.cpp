@@ -194,50 +194,100 @@ bool ExecuteCommand(const Command& cmd, TaskList& tasks)
             if (cmd.filter.empty())
             {
                 tasks.PrintAllTasks();
+                return true;
             }
             else 
             {
-                tasks.ListTasks(cmd.filter);
+                if (!tasks.ListTasks(cmd.filter)) 
+                {
+                    std::cerr << "Error: Could not list tasks with filter '" 
+                        << cmd.filter << "'" << std::endl;
+                    return false;
+                }
+                return true;
             }
-            break;
+            
         case Command::Type::ADD:
-            tasks.AddTask(cmd.description);
-            break;
+            if (!tasks.AddTask(cmd.description)) 
+            {
+                std::cerr << "Error: Could not add task '" << cmd.description 
+                    << "'" << std::endl;
+                return false;
+            }
+            return true;
+            
         case Command::Type::UPDATE:
-            if (*cmd.taskIndex >= tasks.Size())
+            if (*cmd.taskIndex >= tasks.Size()) 
             {
-                std::cerr << "Error: Task index "
-                << (*cmd.taskIndex + 1) << " out of range" << std::endl;
+                std::cerr << "Error: Task index " << (*cmd.taskIndex + 1) 
+                    << " out of range (valid: 1..." << tasks.Size() << ")" 
+                    << std::endl;
                 return false;
             }
-            if (!tasks.UpdateTask(*cmd.taskIndex, cmd.description))
+            if (!tasks.UpdateTask(*cmd.taskIndex, cmd.description)) 
             {
-                std::cerr << "Error: Could not update Task "
-                << (*cmd.taskIndex + 1) << std::endl;
+                std::cerr << "Error: Could not update task " 
+                    << (*cmd.taskIndex + 1) << std::endl;
                 return false;
             }
-            break;
+            return true;
+            
         case Command::Type::DELETE:
-            if (!tasks.RemoveTask(*cmd.taskIndex))
+            if (*cmd.taskIndex >= tasks.Size()) 
             {
-                std::cerr << "Error: Could not delete Task " 
-                << (*cmd.taskIndex + 1) << std::endl;
+                std::cerr << "Error: Task index " << (*cmd.taskIndex + 1) 
+                    << " out of range (valid: 1..." << tasks.Size() << ")" 
+                    << std::endl;
                 return false;
             }
-            break;
+            if (!tasks.RemoveTask(*cmd.taskIndex)) 
+            {
+                std::cerr << "Error: Could not delete task " 
+                    << (*cmd.taskIndex + 1) << std::endl;
+                return false;
+            }
+            return true;
+            
         case Command::Type::MARK_DONE:
-            tasks.MarkTask(*cmd.taskIndex, Task::Status::DONE);
-            break;
+            if (*cmd.taskIndex >= tasks.Size()) 
+            {
+                std::cerr << "Error: Task index " << (*cmd.taskIndex + 1) 
+                    << " out of range (valid: 1..." << tasks.Size() << ")" 
+                    << std::endl;
+                return false;
+            }
+            if (!tasks.MarkTask(*cmd.taskIndex, Task::Status::DONE)) 
+            {
+                std::cerr << "Error: Could not mark task " 
+                    << (*cmd.taskIndex + 1) << " as done" << std::endl;
+                return false;
+            }
+            return true;
+            
         case Command::Type::MARK_IN_PROGRESS:
-            tasks.MarkTask(*cmd.taskIndex, Task::Status::IN_PROGRESS);
-            break;
+            if (*cmd.taskIndex >= tasks.Size()) 
+            {
+                std::cerr << "Error: Task index " << (*cmd.taskIndex + 1) 
+                    << " out of range (valid: 1..." << tasks.Size() << ")" 
+                    << std::endl;
+                return false;
+            }
+            if (!tasks.MarkTask(*cmd.taskIndex, Task::Status::IN_PROGRESS)) 
+            {
+                std::cerr << "Error: Could not mark task " 
+                    << (*cmd.taskIndex + 1) << " as in-progress" << std::endl;
+                return false;
+            }
+            return true;
+            
         case Command::Type::INVALID:
             std::cerr << "Error: Invalid command type" << std::endl;
-            break;
+            return false;
+            
         default:
+            std::cerr << "Error: Unknown command type" << std::endl;
             return false;
     }
-    return true;
 }
 
 std::optional<size_t> ParseTaskIndex(char const* userInput)

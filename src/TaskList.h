@@ -12,11 +12,11 @@ public:
     ~TaskList();
 
     // CRUD
-    void AddTask(std::string_view desc);
+    bool AddTask(std::string_view desc);
     bool UpdateTask(size_t index, std::string desc);
     bool RemoveTask(size_t index);
-    void MarkTask(size_t index, Task::Status);
-    void ListTasks(std::string s);
+    bool MarkTask(size_t index, Task::Status);
+    bool ListTasks(std::string s);
 
     // Helper
     void PrintAllTasks();
