@@ -100,16 +100,12 @@ TaskList::TaskList()
 
 TaskList::~TaskList()
 {
-    // Create json file if it doesn't exist
-    std::ofstream write_stream{g_taskListPath, std::ios::app};
-    if (!write_stream)
+    // Only write to file if there are tasks to save
+    if (!tasks_.empty())
     {
-        std::cerr << g_taskListPath << " Could not be opened for writing\n";
+        WriteVectorToFile(tasks_);
+        AtomicReplace(g_taskListPath, g_taskListPathTmp);
     }
-    
-    WriteVectorToFile(tasks_);
-    if(write_stream.is_open()) write_stream.close();
-    AtomicReplace(g_taskListPath, g_taskListPathTmp);
 }
 
 bool TaskList::AddTask(std::string_view desc)
@@ -355,7 +351,7 @@ std::string TaskList::ExtractJsonValue(const std::string& obj, const std::string
 
 void TaskList::WriteVectorToFile(std::vector<Task>& tasks)
 {
-    std::ofstream write_stream{g_taskListPathTmp, std::ios::app};
+    std::ofstream write_stream{g_taskListPathTmp, std::ios::trunc};
     if (!write_stream)
     {
         std::cerr << g_taskListPathTmp << " Could not be opened for writing\n";
@@ -425,7 +421,7 @@ std::optional<Task::Status> TaskList::ParseStatus(std::string_view sv)
 
 std::chrono::system_clock::time_point TaskList::ParseDateTimeString(const std::string& dateStr)
 {
-    // Expected format: "2024-01-15 14:30:25"
+    // Expected format: "2025-08-02 23:56:24"
     std::tm tm = {};
     std::istringstream ss(dateStr);
     ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
@@ -435,7 +431,22 @@ std::chrono::system_clock::time_point TaskList::ParseDateTimeString(const std::s
         return std::chrono::system_clock::now();
     }
     
+    // Set timezone to local time
+    tm.tm_isdst = -1; // Let mktime determine DST
+    
     // Convert tm to time_t, then to time_point
     std::time_t time = std::mktime(&tm);
-    return std::chrono::system_clock::from_time_t(time);
+    
+    // Check if the parsed time is in the future (more than 1 day ahead)
+    auto now = std::chrono::system_clock::now();
+    auto parsed_time = std::chrono::system_clock::from_time_t(time);
+    auto one_day = std::chrono::hours(24);
+    
+    if (parsed_time > now + one_day) {
+        // If the parsed time is more than 1 day in the future, 
+        // it's likely a parsing error, so use current time
+        return now;
+    }
+    
+    return parsed_time;
 }

@@ -11,6 +11,11 @@
 #include <stdexcept>
 #include <string>
 
+// TODO:
+// - <update> updatedAt wird nicht ge-updated wenn Task::Status geändert wird
+// - <delete> irgendwas geht bei den indices sehr schief -> behalten unique id
+// - tests updaten und mehr schreiben
+
 // Structs
 struct Command 
 {

@@ -68,7 +68,7 @@ void Task::ToJson(std::ostream& stream, int indent) const
             << ind << "    \"description\": " << "\"" << m_description << "\",\n"
             << ind << "    \"status\": " << "\"" << toString(GetStatus()) << "\",\n"
             << ind << "    \"createdAt\": " << "\"" << m_createdAt << "\",\n"
-            << ind << "    \"updatedAt\": " << "\"" << "null" << "\"\n"
+            << ind << "    \"updatedAt\": " << "\"" << GetUpdatedAtString() << "\"\n"
             << ind << "}";
 }
 
