@@ -185,10 +185,6 @@ std::optional<Command> ParseArguments(int argc, char* argv[])
         std::cerr << "Error: unknown or invalid command" << std::endl;
         return std::nullopt;
     }
-
-    // Parameter Extraction and Validation
-
-    return command;
 }
 
 bool ExecuteCommand(const Command& cmd, TaskList& tasks)
@@ -208,10 +204,26 @@ bool ExecuteCommand(const Command& cmd, TaskList& tasks)
             tasks.AddTask(cmd.description);
             break;
         case Command::Type::UPDATE:
-            tasks.UpdateTask(*cmd.taskIndex, cmd.description);
+            if (*cmd.taskIndex >= tasks.Size())
+            {
+                std::cerr << "Error: Task index "
+                << (*cmd.taskIndex + 1) << " out of range" << std::endl;
+                return false;
+            }
+            if (!tasks.UpdateTask(*cmd.taskIndex, cmd.description))
+            {
+                std::cerr << "Error: Could not update Task "
+                << (*cmd.taskIndex + 1) << std::endl;
+                return false;
+            }
             break;
         case Command::Type::DELETE:
-            tasks.RemoveTask(*cmd.taskIndex);
+            if (!tasks.RemoveTask(*cmd.taskIndex))
+            {
+                std::cerr << "Error: Could not delete Task " 
+                << (*cmd.taskIndex + 1) << std::endl;
+                return false;
+            }
             break;
         case Command::Type::MARK_DONE:
             tasks.MarkTask(*cmd.taskIndex, Task::Status::DONE);
