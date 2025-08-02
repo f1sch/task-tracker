@@ -14,6 +14,10 @@ public:
     };
     
     Task(int id, std::string_view description);
+    Task(int id, std::string_view description, Status status, 
+        std::chrono::system_clock::time_point createdAt, 
+        std::optional<std::chrono::system_clock::time_point> updatedAt);
+
     ~Task() = default;
 
     // change task
@@ -37,14 +41,14 @@ public:
     Task CreateTaskFromString(const std::string& objectString);
     
     // Getter
-    int GetId() const;
-    std::string_view GetDescription() const;
+    int GetId() const noexcept { return m_id; };
+    std::string_view GetDescription() const { return m_description; };
     constexpr Status GetStatus() const noexcept { return m_status; };
-    std::chrono::system_clock::time_point GetCreatedAt() const;
-    std::optional<std::chrono::system_clock::time_point> GetUpdatedAt() const;
+    std::chrono::system_clock::time_point GetCreatedAt() const { return m_createdAt; };
+    std::optional<std::chrono::system_clock::time_point> GetUpdatedAt() const { return m_updatedAt; };
 
     // Setter
-    void SetId(int id);
+    void SetId(int id) noexcept { m_id = id; };
     //void SetDescription(std::string newDesc);
 
 private:

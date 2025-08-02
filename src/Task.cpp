@@ -25,6 +25,14 @@ Task::Task(int id, std::string_view description)
      m_createdAt = chrono::system_clock::now();
 }
 
+Task::Task(int id, std::string_view description, Status status, 
+        std::chrono::system_clock::time_point createdAt, 
+        std::optional<std::chrono::system_clock::time_point> updatedAt)
+    : m_id(id), m_description(description), m_status(status), m_createdAt(createdAt), m_updatedAt(updatedAt)
+{
+
+}
+
 bool Task::UpdateTask(std::string_view description)
 {
     m_description = description;
@@ -62,28 +70,4 @@ void Task::ToJson(std::ostream& stream, int indent) const
             << ind << "    \"createdAt\": " << "\"" << m_createdAt << "\",\n"
             << ind << "    \"updatedAt\": " << "\"" << "null" << "\"\n"
             << ind << "}";
-}
-
-int Task::GetId() const
-{
-    return m_id;
-}
-
-std::string_view Task::GetDescription() const
-{
-    return m_description;
-}
-
-std::chrono::system_clock::time_point Task::GetCreatedAt() const
-{
-    return m_createdAt;
-}
-std::optional<std::chrono::system_clock::time_point> Task::GetUpdatedAt() const
-{
-    return m_updatedAt;
-}
-
-void Task::SetId(int id)
-{
-    m_id = id;
 }
