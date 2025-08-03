@@ -25,9 +25,9 @@
     #include <limits.h>
 #endif
 
-TaskList::TaskList()
+TaskList::TaskList(const std::filesystem::path& jsonPath)
 {
-    LoadFromFile();
+    LoadFromFile(jsonPath);
 }
 
 TaskList::~TaskList()
@@ -66,12 +66,20 @@ bool TaskList::UpdateTask(size_t index, std::string desc)
     // Validate bounds
     if (index >= tasks_.size()) 
     {
+        std::cerr << "Error: Index greater than number of tasks" << std::endl;
         return false;
     }
     
+    if (index < 0)
+    {
+        std::cerr << "Error: Negative index is not a valid index" << std::endl;
+        return false;
+    }
+
     // Validate input
     if (desc.empty()) 
     {
+        std::cerr << "Error: Description is missing" << std::endl;
         return false;
     }
     
@@ -384,10 +392,10 @@ std::chrono::system_clock::time_point TaskList::ParseDateTimeString(const std::s
     return parsed_time;
 }
 
-bool TaskList::LoadFromFile()
+bool TaskList::LoadFromFile(const std::filesystem::path& jsonPath)
 {
     auto exeDir = GetExecutablePath();
-    g_taskListPath = exeDir / "../task-tracker.json";
+    g_taskListPath = exeDir / jsonPath;
     g_taskListPathTmp = exeDir / "../task-tracker.json.tmp";
 
     // Open JSON file

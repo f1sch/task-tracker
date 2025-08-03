@@ -12,7 +12,6 @@
 #include <string>
 
 // TODO:
-// - <update> updatedAt wird nicht ge-updated wenn Task::Status geändert wird
 // - <delete> irgendwas geht bei den indices sehr schief -> behalten unique id
 // - tests updaten und mehr schreiben
 
@@ -345,7 +344,7 @@ int main(int argc, char *argv[])
     }
     
     // Create TaskList to get data
-    auto tasks = TaskList();
+    auto tasks = TaskList("task-tracker.json");
     return ExecuteCommand(*command, tasks)
         ? EXIT_SUCCESS : EXIT_FAILURE;
 }

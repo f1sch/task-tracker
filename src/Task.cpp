@@ -2,6 +2,7 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <iostream>
 #include <ostream>
 #include <sstream>
 
@@ -36,6 +37,17 @@ Task::Task(int id, std::string_view description, Status status,
 
 bool Task::UpdateTask(std::string_view description)
 {
+    if (description.empty())
+    {
+        std::cerr << "Error: Empty Description is invalid" << std::endl;
+        return false;
+    }
+    else if (description.size() > 1000)
+    {
+        std::cerr << "Error: Description must be < 1000 characters" << std::endl;
+        return false;
+    }
+        
     m_description = description;
     m_updatedAt = chrono::system_clock::now();
     return true;

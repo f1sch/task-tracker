@@ -9,7 +9,7 @@
 class TaskList
 {
 public:
-    TaskList();
+    TaskList(const std::filesystem::path& jsonPath = "task-tracker.json");
     ~TaskList();
 
     // CRUD
@@ -39,7 +39,7 @@ private:
     std::filesystem::path GetExecutablePath();
     void AtomicReplace(const std::filesystem::path& orig, const std::filesystem::path& tmp);
     void WriteVectorToFile(std::vector<Task>& tasks);
-    bool LoadFromFile();
+    bool LoadFromFile(const std::filesystem::path& jsonPath);
     //bool SaveToFile(std::string const& filename) const;
 
 private:
