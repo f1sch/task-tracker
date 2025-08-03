@@ -27,8 +27,8 @@ public:
     // Filter
     std::vector<Task> GetByStatus(Task::Status s) const;
     std::vector<Task> FindByKeyWord(std::string_view word) const;
-private:
 
+private:
     // Modify
     std::vector<std::string> SplitTasks(const std::string& json);
     std::string ExtractJsonValue(const std::string& obj, const std::string& key);
@@ -39,8 +39,8 @@ private:
     std::filesystem::path GetExecutablePath();
     void AtomicReplace(const std::filesystem::path& orig, const std::filesystem::path& tmp);
     void WriteVectorToFile(std::vector<Task>& tasks);
-    bool LoadFromFile(std::string const& filename);
-    bool SaveToFile(std::string const& filename) const;
+    bool LoadFromFile();
+    //bool SaveToFile(std::string const& filename) const;
 
 private:
     std::vector<Task> tasks_;

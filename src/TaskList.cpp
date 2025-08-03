@@ -27,75 +27,7 @@
 
 TaskList::TaskList()
 {
-    auto exeDir = GetExecutablePath();
-    g_taskListPath = exeDir / "../task-tracker.json";
-    g_taskListPathTmp = exeDir / "../task-tracker.json.tmp";
-
-    // Open JSON file
-    // Create reading stream to json file
-    std::ifstream read_stream{g_taskListPath};
-    if (!read_stream)
-    {
-        std::cerr << g_taskListPath << " Could not be opened for reading\n";
-        return;
-    }
-
-    // Read JSON file
-    // Stream whole file into as one string
-    std::string wholeJsonFile;
-    {
-        std::ostringstream oss;
-        oss << read_stream.rdbuf();
-        wholeJsonFile = oss.str();
-    }
-    if (wholeJsonFile.empty() || wholeJsonFile == "")
-    {
-        std::cerr << "Error: jsonfilestring is empty\n";
-        return;
-    }
-
-    // Get every task object as a string
-    auto tasksJson = SplitTasks(wholeJsonFile);
-    if (tasksJson.empty())
-    {
-        std::cerr << "Error: tasksJson is empty\n";
-        return;
-    }
-    // Save data in tasks_
-    // Convert task object strings to Task object
-    for (auto const& s : tasksJson)
-    {
-        // Get string inside {}
-        auto start = s.find('{');
-        auto end = s.find('}');
-        std::string inner = s.substr(start, end - start -1);
-
-        // Get values
-        // TODO: needs checking
-        int id = std::stoi(ExtractJsonValue(inner, "id"));
-        std::string desc = ExtractJsonValue(inner, "description");
-        auto status = 
-            ParseStatus(ExtractJsonValue(inner, "status"));
-        if (!status)
-        {
-            std::cerr << "Error: Invalid status value in JSON\n";
-            return;
-        }
-        std::string createdAt = ExtractJsonValue(inner, "createdAt");
-        std::string updatedAt = ExtractJsonValue(inner, "updatedAt");
-        
-        // Parse date strings to time_point objects
-        auto createdAtTp = ParseDateTimeString(createdAt);
-        std::optional<std::chrono::system_clock::time_point> updatedAtTp;
-        if (updatedAt != "null") {
-            updatedAtTp = ParseDateTimeString(updatedAt);
-        }
-        
-        tasks_.push_back(
-            Task(id, desc, *status, 
-                createdAtTp, updatedAtTp));
-    }
-    if(read_stream.is_open()) read_stream.close();
+    LoadFromFile();
 }
 
 TaskList::~TaskList()
@@ -233,7 +165,7 @@ std::vector<Task> TaskList::FindByKeyWord(std::string_view word) const
 {
     std::vector<Task> out;
     // TODO:
-    
+
     return out;
 }
 
@@ -450,4 +382,78 @@ std::chrono::system_clock::time_point TaskList::ParseDateTimeString(const std::s
     }
     
     return parsed_time;
+}
+
+bool TaskList::LoadFromFile()
+{
+    auto exeDir = GetExecutablePath();
+    g_taskListPath = exeDir / "../task-tracker.json";
+    g_taskListPathTmp = exeDir / "../task-tracker.json.tmp";
+
+    // Open JSON file
+    // Create reading stream to json file
+    std::ifstream read_stream{g_taskListPath};
+    if (!read_stream)
+    {
+        std::cerr << g_taskListPath << " Could not be opened for reading\n";
+        return false;
+    }
+
+    // Read JSON file
+    // Stream whole file into as one string
+    std::string wholeJsonFile;
+    {
+        std::ostringstream oss;
+        oss << read_stream.rdbuf();
+        wholeJsonFile = oss.str();
+    }
+    if (wholeJsonFile.empty() || wholeJsonFile == "")
+    {
+        std::cerr << "Error: jsonfilestring is empty\n";
+        return false;
+    }
+
+    // Get every task object as a string
+    auto tasksJson = SplitTasks(wholeJsonFile);
+    if (tasksJson.empty())
+    {
+        std::cerr << "Error: tasksJson is empty\n";
+        return false;
+    }
+    // Save data in tasks_
+    // Convert task object strings to Task object
+    for (auto const& s : tasksJson)
+    {
+        // Get string inside {}
+        auto start = s.find('{');
+        auto end = s.find('}');
+        std::string inner = s.substr(start, end - start -1);
+
+        // Get values
+        // TODO: needs checking
+        int id = std::stoi(ExtractJsonValue(inner, "id"));
+        std::string desc = ExtractJsonValue(inner, "description");
+        auto status = 
+            ParseStatus(ExtractJsonValue(inner, "status"));
+        if (!status)
+        {
+            std::cerr << "Error: Invalid status value in JSON\n";
+            return false;
+        }
+        std::string createdAt = ExtractJsonValue(inner, "createdAt");
+        std::string updatedAt = ExtractJsonValue(inner, "updatedAt");
+        
+        // Parse date strings to time_point objects
+        auto createdAtTp = ParseDateTimeString(createdAt);
+        std::optional<std::chrono::system_clock::time_point> updatedAtTp;
+        if (updatedAt != "null") {
+            updatedAtTp = ParseDateTimeString(updatedAt);
+        }
+        
+        tasks_.push_back(
+            Task(id, desc, *status, 
+                createdAtTp, updatedAtTp));
+    }
+    if(read_stream.is_open()) read_stream.close();
+    return true;
 }
