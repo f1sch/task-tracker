@@ -6,14 +6,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <exception>
+#include <filesystem>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
-
-// TODO:
-// - <delete> irgendwas geht bei den indices sehr schief -> behalten unique id
-// - tests updaten und mehr schreiben
 
 // Structs
 struct Command 
@@ -322,11 +319,15 @@ std::optional<size_t> ParseTaskIndex(char const* userInput)
 }
 void PrintUsage(const char* progName)
 {
+    // Extract just the filename from the full path
+    std::filesystem::path path(progName);
+    std::string programName = path.filename().string();
+    
     std::cout 
-    << "Usage: " << progName << " <command> [options]\n"
+    << "Usage: " << programName << " <command> [options]\n"
     << "Commands:\n"
-    << "  add \"<task description>\"            Add a new Task\n"
-    << "  update <id> \"<new description>\"     Update an existing task\n"
+    << "  add \"<task description>\"              Add a new Task\n"
+    << "  update <id> \"<new description>\"       Update an existing task\n"
     << "  delete <id>                           Delete a task\n"
     << "  mark-in-progress <id>                 Mark task as in-progress\n"
     << "  mark-done <id>                        Mark task as done\n"
