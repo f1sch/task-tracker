@@ -44,6 +44,7 @@ bool Task::UpdateTask(std::string_view description)
 void Task::MarkTask(Status status)
 {
     m_status = status;
+    m_updatedAt = chrono::system_clock::now();
 }
 
 void Task::PrintTask(std::ostream& stream) const noexcept

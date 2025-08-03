@@ -9,15 +9,15 @@
     {
         "id": 2,
         "description": "Test task 2",
-        "status": "TODO",
+        "status": "IN_PROGRESS",
         "createdAt": "2025-08-02 23:08:52",
-        "updatedAt": "null"
+        "updatedAt": "2025-08-03 09:48:07"
     },
     {
         "id": 3,
         "description": "Test task 3",
-        "status": "TODO",
+        "status": "IN_PROGRESS",
         "createdAt": "2025-08-02 23:09:01",
-        "updatedAt": "null"
+        "updatedAt": "2025-08-03 09:52:56"
     }
 ]

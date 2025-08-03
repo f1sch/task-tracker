@@ -38,7 +38,6 @@ public:
 
         return {};
     }
-    Task CreateTaskFromString(const std::string& objectString);
     
     // Getter
     int GetId() const noexcept { return m_id; };
